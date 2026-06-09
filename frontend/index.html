@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Hardware & Paints</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">SH</div>
+        <div>
+          <strong>Super Hardware & Paints</strong>
+          <span>Bidar Digital Storefront</span>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-item active" data-view="shop" type="button">Storefront</button>
+        <button class="nav-item" data-view="orders" type="button">My Orders</button>
+        <button class="nav-item" data-view="admin" type="button">Admin</button>
+      </nav>
+
+      <section class="department-nav">
+        <h3>Department</h3>
+        <button type="button" data-dept="Plumbing">Plumbing</button>
+        <button type="button" data-dept="Electrical">Electrical</button>
+        <button type="button" data-dept="Hardware Tools">Tools</button>
+        <button type="button" data-dept="Paints">Paints</button>
+        <button type="button" data-dept="Pipes & Fittings">Pipes</button>
+      </section>
+
+      <section class="panel compact auth-panel">
+        <div class="panel-heading">
+          <h2>Account</h2>
+          <span id="userBadge" class="badge muted">Guest</span>
+        </div>
+        <div id="authForms" class="stack">
+          <form id="loginForm" class="stack">
+            <input name="email" type="email" placeholder="Email" autocomplete="email" required>
+            <input name="password" type="password" placeholder="Password" autocomplete="current-password" required>
+            <button class="primary" type="submit">Sign in</button>
+          </form>
+          <details>
+            <summary>Create account</summary>
+            <form id="registerForm" class="stack inner-form">
+              <input name="name" placeholder="Full name" autocomplete="name" required>
+              <input name="email" type="email" placeholder="Email" autocomplete="email" required>
+              <input name="phone" placeholder="Phone" autocomplete="tel">
+              <input name="password" type="password" placeholder="Password" minlength="8" autocomplete="new-password" required>
+              <button type="submit">Register</button>
+            </form>
+          </details>
+        </div>
+        <div id="signedInPanel" class="stack hidden">
+          <p id="signedInText" class="muted-text"></p>
+          <button id="logoutBtn" type="button">Sign out</button>
+        </div>
+      </section>
+
+      <div class="sidebar-actions">
+        <a class="quote-btn" href="tel:9342371525">Request Quote</a>
+        <button class="side-link" data-admin-page-shortcut="stock" type="button">Stock Alerts</button>
+        <button class="side-link" data-admin-page-shortcut="orders" type="button">Order Received</button>
+        <button class="side-link" data-admin-page-shortcut="products" type="button">Product Desk</button>
+        <button class="side-link" data-admin-page-shortcut="add" type="button">Add Product</button>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Super Hardware & Paints</p>
+          <h1 id="viewTitle">Storefront</h1>
+        </div>
+        <div class="topbar-actions">
+          <label class="api-control">
+            <span>API</span>
+            <input id="apiBaseInput" value="http://127.0.0.1:8000/api/v1">
+          </label>
+          <button id="refreshBtn" class="icon-btn" type="button" title="Refresh">Refresh</button>
+        </div>
+      </header>
+
+      <div id="toast" class="toast hidden"></div>
+
+      <section id="shopView" class="view active">
+        <section class="shop-info">
+          <div>
+            <p class="eyebrow">Railway Station Road, Bidar</p>
+            <h2>Super Hardware & Paints</h2>
+            <p class="muted-text">Shop No. 9-183/5, CMC Complex, Opp. Bus Stand, Bidar - 585401. Open daily 9:00 am - 9:30 pm.</p>
+            <p class="shop-copy">Paints, hardware, plumbing, electrical and household supplies for every project, from home repairs to construction work.</p>
+          </div>
+          <div class="shop-actions">
+            <a class="shop-link primary-link" href="tel:9342371525">Call 9342371525</a>
+            <a class="shop-link" href="https://wa.me/919342371525" target="_blank" rel="noreferrer">WhatsApp</a>
+          </div>
+        </section>
+
+        <div class="toolbar">
+          <input id="searchInput" class="search" placeholder="Search paints, pipes, switches, tools...">
+          <select id="categoryFilter">
+            <option value="">All categories</option>
+          </select>
+          <input id="minPrice" type="number" min="0" placeholder="Min price">
+          <input id="maxPrice" type="number" min="0" placeholder="Max price">
+          <label class="check"><input id="inStockOnly" type="checkbox"> In stock</label>
+          <button id="applyFiltersBtn" type="button">Apply</button>
+        </div>
+
+        <div class="content-grid">
+          <section class="products-section">
+            <div class="section-title">
+              <h2>Products</h2>
+              <span id="productCount" class="muted-text">Loading...</span>
+            </div>
+            <div id="productsGrid" class="products-grid"></div>
+          </section>
+
+          <aside class="panel cart-panel">
+            <div class="panel-heading">
+              <h2>Cart</h2>
+              <span id="cartCount" class="badge">0 items</span>
+            </div>
+            <div id="cartItems" class="cart-items"></div>
+            <div class="cart-total">
+              <span>Total</span>
+              <strong id="cartTotal">₹0.00</strong>
+            </div>
+            <button id="checkoutBtn" class="primary wide" type="button">Checkout</button>
+            <button id="clearCartBtn" class="wide" type="button">Clear cart</button>
+          </aside>
+        </div>
+      </section>
+
+      <section id="ordersView" class="view">
+        <div class="section-title">
+          <h2>My Orders</h2>
+          <span class="muted-text">Track purchases created from the storefront.</span>
+        </div>
+        <div id="ordersList" class="orders-list"></div>
+      </section>
+
+      <section id="adminView" class="view">
+        <div class="admin-tabs">
+          <button class="admin-tab active" data-admin-page="stock" type="button">Stock Reminder</button>
+          <button class="admin-tab" data-admin-page="orders" type="button">Order Received</button>
+          <button class="admin-tab" data-admin-page="products" type="button">Product Desk</button>
+          <button class="admin-tab" data-admin-page="add" type="button">Add Product</button>
+        </div>
+
+        <div class="admin-pages">
+          <section class="panel stock-alert-panel admin-page active" id="adminStockPage">
+            <div class="panel-heading">
+              <div>
+                <h2>Stock Reminder</h2>
+                <span class="muted-text">Products needing refill before customers ask.</span>
+              </div>
+              <span id="stockAlertCount" class="badge muted">0 alerts</span>
+            </div>
+            <div id="stockAlerts" class="stock-alerts"></div>
+          </section>
+
+          <section class="panel admin-page" id="adminAddPage">
+            <div class="panel-heading">
+              <h2>Add Product</h2>
+              <span class="badge muted">Admin</span>
+            </div>
+            <form id="productForm" class="stack">
+              <input name="name" placeholder="Product name" required>
+              <textarea name="description" placeholder="Description"></textarea>
+              <div class="split">
+                <input name="price" type="number" min="1" step="0.01" placeholder="Price" required>
+                <input name="stock" type="number" min="0" step="1" placeholder="Stock" required>
+              </div>
+              <select name="category_id">
+                <option value="">No category</option>
+              </select>
+              <input name="image_url" placeholder="Image URL">
+              <button class="primary" type="submit">Create product</button>
+            </form>
+          </section>
+
+          <section class="panel admin-products admin-page" id="adminProductsPage">
+            <div class="panel-heading">
+              <div>
+                <h2>Product Desk</h2>
+                <span class="muted-text">Browse inventory items. Use filters to find a product.</span>
+              </div>
+              <button id="loadAdminProductsBtn" type="button">Load products</button>
+            </div>
+            <div class="product-desk-filters">
+              <input id="adminProductSearch" placeholder="Search product name...">
+              <select id="adminCategoryFilter">
+                <option value="">All categories</option>
+              </select>
+              <select id="adminStockFilter">
+                <option value="">All stock</option>
+                <option value="low">Low stock</option>
+                <option value="out">Out of stock</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            <div id="adminProductsList" class="admin-products-list"></div>
+          </section>
+
+          <section class="panel admin-orders admin-page" id="adminOrdersPage">
+            <div class="panel-heading">
+              <h2>Order Desk</h2>
+              <button id="loadAdminOrdersBtn" type="button">Load orders</button>
+            </div>
+            <div id="adminOrdersList" class="orders-list"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="checkoutDialog">
+    <form id="checkoutForm" method="dialog" class="dialog-form">
+      <div class="panel-heading">
+        <h2>Checkout</h2>
+        <button class="ghost" value="cancel" type="submit">Close</button>
+      </div>
+      <input name="street" placeholder="Street" required>
+      <div class="split">
+        <input name="city" placeholder="City" required>
+        <input name="state" placeholder="State" required>
+      </div>
+      <input name="postal_code" placeholder="Postal code" required>
+      <p class="muted-text">Payment method: cash on delivery</p>
+      <button class="primary" value="submit" type="submit">Place order</button>
+    </form>
+  </dialog>
+
+  <dialog id="billDialog" class="bill-dialog">
+    <div class="bill-shell">
+      <div class="bill-actions no-print">
+        <button id="printBillBtn" class="primary" type="button">Print Bill</button>
+        <button id="closeBillBtn" type="button">Close</button>
+      </div>
+      <div id="billContent" class="bill-content"></div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

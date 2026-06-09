@@ -1,0 +1,9 @@
+{
+  "name": "super-hardware-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Customer and admin UI for the Super Hardware MVP.",
+  "scripts": {
+    "dev": "node server.js"
+  }
+}
