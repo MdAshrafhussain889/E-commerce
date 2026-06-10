@@ -31,6 +31,16 @@ app.include_router(orders_router, prefix=API_PREFIX)
 app.include_router(users_router, prefix=API_PREFIX)
 
 
+@app.get("/")
+def root():
+    return {
+        "status": "ok",
+        "service": "super-hardware-api",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
 @app.get("/health")
 def health_check():
     return {"status": "ok", "service": "super-hardware-api"}
