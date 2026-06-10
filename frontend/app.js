@@ -1,5 +1,5 @@
 const state = {
-  apiBase: localStorage.getItem("superHardwareApiBase") || "http://127.0.0.1:8000/api/v1",
+  apiBase: localStorage.getItem("superHardwareApiBase") || "https://e-commerce-rjgf.onrender.com/api/v1",
   token: localStorage.getItem("superHardwareToken") || "",
   refreshToken: localStorage.getItem("superHardwareRefreshToken") || "",
   user: JSON.parse(localStorage.getItem("superHardwareUser") || "null"),
