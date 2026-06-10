@@ -15,7 +15,6 @@ const state = {
 localStorage.setItem("superHardwareSessionId", state.sessionId);
 
 const els = {
-  apiBaseInput: document.querySelector("#apiBaseInput"),
   refreshBtn: document.querySelector("#refreshBtn"),
   toast: document.querySelector("#toast"),
   viewTitle: document.querySelector("#viewTitle"),
@@ -36,13 +35,18 @@ const els = {
   minPrice: document.querySelector("#minPrice"),
   maxPrice: document.querySelector("#maxPrice"),
   inStockOnly: document.querySelector("#inStockOnly"),
+  sortProducts: document.querySelector("#sortProducts"),
   applyFiltersBtn: document.querySelector("#applyFiltersBtn"),
   cartItems: document.querySelector("#cartItems"),
   cartCount: document.querySelector("#cartCount"),
   cartTotal: document.querySelector("#cartTotal"),
   checkoutBtn: document.querySelector("#checkoutBtn"),
+  whatsAppCartBtn: document.querySelector("#whatsAppCartBtn"),
   clearCartBtn: document.querySelector("#clearCartBtn"),
   checkoutDialog: document.querySelector("#checkoutDialog"),
+  checkoutAuthOption: document.querySelector(".checkout-auth-option"),
+  checkoutAsGuest: document.querySelector("#checkoutAsGuest"),
+  checkoutWithLogin: document.querySelector("#checkoutWithLogin"),
   checkoutForm: document.querySelector("#checkoutForm"),
   billDialog: document.querySelector("#billDialog"),
   billContent: document.querySelector("#billContent"),
@@ -62,11 +66,12 @@ const els = {
   adminStockFilter: document.querySelector("#adminStockFilter"),
   adminOrdersList: document.querySelector("#adminOrdersList"),
   loadAdminOrdersBtn: document.querySelector("#loadAdminOrdersBtn"),
+  adminGate: document.querySelector("#adminGate"),
+  adminOnly: document.querySelectorAll(".admin-only"),
   departmentButtons: document.querySelectorAll("[data-dept]"),
   viewShortcuts: document.querySelectorAll("[data-view-shortcut]"),
 };
 
-els.apiBaseInput.value = state.apiBase;
 
 function money(value) {
   return new Intl.NumberFormat("en-IN", {
@@ -147,6 +152,9 @@ function clearAuth() {
 }
 
 function renderAuth() {
+  const isAdmin = state.user?.role === "admin";
+  els.adminOnly.forEach((item) => item.classList.toggle("hidden", !isAdmin));
+
   if (state.user) {
     els.userBadge.textContent = state.user.role;
     els.userBadge.classList.remove("muted");
@@ -161,6 +169,16 @@ function renderAuth() {
   els.authForms.classList.remove("hidden");
   els.signedInPanel.classList.add("hidden");
   els.signedInText.textContent = "";
+}
+
+function ensureAdminAccess() {
+  const isAdmin = state.user?.role === "admin";
+  if (els.adminGate) {
+    els.adminGate.classList.toggle("hidden", isAdmin);
+  }
+  els.adminTabs.forEach((tab) => tab.classList.toggle("hidden", !isAdmin));
+  els.adminPages.forEach((page) => page.classList.toggle("hidden", !isAdmin));
+  return isAdmin;
 }
 
 function renderCategories() {
@@ -187,13 +205,14 @@ function productInitial(name) {
 }
 
 function renderProducts() {
-  els.productCount.textContent = `${state.products.length} shown`;
-  if (!state.products.length) {
+  const products = sortedProducts(state.products);
+  els.productCount.textContent = `${products.length} shown`;
+  if (!products.length) {
     els.productsGrid.innerHTML = `<div class="empty">No products found.</div>`;
     return;
   }
 
-  els.productsGrid.innerHTML = state.products
+  els.productsGrid.innerHTML = products
     .map((product) => {
       const stock = Number(product.stock_available || 0);
       const stockLabel = stock <= 0 ? "Out of stock" : stock <= state.lowStockThreshold ? `Only ${stock} left` : `${stock} in stock`;
@@ -224,11 +243,24 @@ function renderProducts() {
     .join("");
 }
 
+function sortedProducts(products) {
+  const sort = els.sortProducts?.value || "newest";
+  return [...products].sort((a, b) => {
+    if (sort === "price_asc") return Number(a.price || 0) - Number(b.price || 0);
+    if (sort === "price_desc") return Number(b.price || 0) - Number(a.price || 0);
+    if (sort === "stock_asc") return Number(a.stock_available || 0) - Number(b.stock_available || 0);
+    return 0;
+  });
+}
+
 function renderCart() {
   els.cartCount.textContent = `${state.cart.item_count || 0} items`;
   els.cartTotal.textContent = money(state.cart.total_amount);
   els.checkoutBtn.disabled = !state.cart.items.length;
+  els.whatsAppCartBtn.disabled = !state.cart.items.length;
   els.clearCartBtn.disabled = !state.cart.items.length;
+
+  updateFloatingCart(); // keep floating cart in sync
 
   if (!state.cart.items.length) {
     els.cartItems.innerHTML = `<div class="empty">Cart is empty.</div>`;
@@ -252,6 +284,38 @@ function renderCart() {
     `,
     )
     .join("");
+}
+
+function cartWhatsAppMessage() {
+  if (!state.cart.items.length) {
+    return "Hi Super Hardware & Paints, I want to enquire about products.";
+  }
+  const lines = state.cart.items.map((item) => `- ${item.product_name} x ${item.quantity} = ${money(item.line_total)}`);
+  return [
+    "Hi Super Hardware & Paints, I want to order these items:",
+    ...lines,
+    `Total: ${money(state.cart.total_amount)}`,
+    "Please confirm availability and delivery.",
+  ].join("\n");
+}
+
+function openWhatsApp(message) {
+  const url = `https://wa.me/919342371525?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+// Update floating cart UI based on state.cart
+function updateFloatingCart() {
+  const floatingCart = document.querySelector("#floatingCart");
+  const cartCount = document.querySelector(".floating-cart .cart-count");
+  if (!floatingCart || !cartCount) return;
+
+  if (state.cart.item_count > 0) {
+    floatingCart.classList.remove("hidden");
+    cartCount.textContent = state.cart.item_count;
+  } else {
+    floatingCart.classList.add("hidden");
+  }
 }
 
 function orderStatusBadge(status) {
@@ -526,6 +590,7 @@ function renderAdminProducts(products = filteredAdminProducts()) {
 }
 
 function setAdminPage(pageName) {
+  if (!ensureAdminAccess()) return;
   els.adminTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.adminPage === pageName));
   els.adminPages.forEach((page) => {
     const id = page.id.replace("admin", "").replace("Page", "").toLowerCase();
@@ -543,19 +608,25 @@ function setAdminPage(pageName) {
 }
 
 function setView(viewName) {
+  if (viewName === "admin" && !ensureAdminAccess()) {
+    viewName = "admin";
+  }
   els.navItems.forEach((item) => item.classList.toggle("active", item.dataset.view === viewName));
   els.views.forEach((view) => view.classList.toggle("active", view.id === `${viewName}View`));
   els.viewTitle.textContent = {
     shop: "Storefront",
     orders: "My Orders",
     admin: "Admin",
+    policies: "Policies",
   }[viewName];
 
   if (viewName === "orders") {
     loadMyOrders();
   }
-  if (viewName === "admin" && state.user?.role === "admin") {
-    setAdminPage(document.querySelector(".admin-tab.active")?.dataset.adminPage || "stock");
+  if (viewName === "admin") {
+    if (ensureAdminAccess()) {
+      setAdminPage(document.querySelector(".admin-tab.active")?.dataset.adminPage || "stock");
+    }
   }
 }
 
@@ -654,23 +725,49 @@ els.adminPageShortcuts.forEach((shortcut) => {
 });
 
 els.departmentButtons.forEach((button) => {
-  button.addEventListener("click", () => {
+  button.addEventListener("click", async () => {
     const category = state.categories.find((cat) => cat.name === button.dataset.dept);
     if (category) {
+      const activeViewId = document.querySelector(".view.active")?.id;
+      els.departmentButtons.forEach((item) => item.classList.toggle("active", item === button));
+
+      if (activeViewId === "adminView" && state.user?.role === "admin") {
+        if (els.adminProductSearch) els.adminProductSearch.value = "";
+        if (els.adminStockFilter) els.adminStockFilter.value = "";
+        if (els.adminCategoryFilter) els.adminCategoryFilter.value = category.id;
+        setAdminPage("products");
+        if (state.adminProducts.length) {
+          renderAdminProducts();
+        } else {
+          await loadAdminProducts();
+        }
+        return;
+      }
+
+      els.searchInput.value = "";
+      els.minPrice.value = "";
+      els.maxPrice.value = "";
+      els.inStockOnly.checked = false;
       els.categoryFilter.value = category.id;
-      setView("shop");
-      loadProducts();
+      if (activeViewId !== "shopView") {
+        setView("shop");
+      }
+      await loadProducts();
     }
   });
 });
 
 els.refreshBtn.addEventListener("click", refreshAll);
-els.apiBaseInput.addEventListener("change", () => {
-  state.apiBase = els.apiBaseInput.value.replace(/\/$/, "");
-  refreshAll();
-});
 
 els.applyFiltersBtn.addEventListener("click", loadProducts);
+els.categoryFilter.addEventListener("change", async () => {
+  els.departmentButtons.forEach((button) => {
+    const category = state.categories.find((cat) => cat.name === button.dataset.dept);
+    button.classList.toggle("active", Boolean(category && category.id === els.categoryFilter.value));
+  });
+  await loadProducts();
+});
+els.sortProducts?.addEventListener("change", renderProducts);
 els.searchInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") loadProducts();
 });
@@ -723,33 +820,87 @@ els.clearCartBtn.addEventListener("click", async () => {
   }
 });
 
+els.whatsAppCartBtn.addEventListener("click", () => {
+  openWhatsApp(cartWhatsAppMessage());
+});
+
 els.checkoutBtn.addEventListener("click", () => {
   if (!state.token) {
-    showToast("Sign in before checkout.", true);
-    return;
+    showCheckoutAuthChoice();
+  } else {
+    proceedToCheckout(false);
   }
-  els.checkoutDialog.showModal();
 });
+
+function showCheckoutAuthChoice() {
+  state.isGuestCheckout = false;
+  els.checkoutForm.style.display = "none";
+  els.checkoutAuthOption?.classList.remove("hidden");
+  if (!els.checkoutDialog.open) {
+    els.checkoutDialog.showModal();
+  }
+}
+
+function proceedToCheckout(isGuest = false) {
+  state.isGuestCheckout = isGuest;
+  els.checkoutAuthOption?.classList.add("hidden");
+  els.checkoutForm.style.display = "grid";
+  const emailInput = els.checkoutForm.querySelector('input[name="email"]');
+  if (emailInput) {
+    emailInput.value = state.user?.email || emailInput.value;
+  }
+  if (!els.checkoutDialog.open) {
+    els.checkoutDialog.showModal();
+  }
+  emailInput?.focus();
+}
+
+function closeCheckoutAndShowSignIn() {
+  els.checkoutDialog.close();
+  els.checkoutAuthOption?.classList.remove("hidden");
+  els.checkoutForm.style.display = "none";
+  setView("shop");
+  document.querySelector(".auth-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  els.loginForm.querySelector('input[name="email"]')?.focus();
+}
+
+els.checkoutAsGuest?.addEventListener("click", () => proceedToCheckout(true));
+els.checkoutWithLogin?.addEventListener("click", closeCheckoutAndShowSignIn);
 
 els.checkoutForm.addEventListener("submit", async (event) => {
   if (event.submitter?.value === "cancel") return;
   event.preventDefault();
+
   const form = new FormData(els.checkoutForm);
+  const formData = Object.fromEntries(form.entries());
+
+  if (state.isGuestCheckout && !formData.email) {
+    showToast("Email required for guest checkout", true);
+    return;
+  }
+
   try {
+    const orderPayload = {
+      use_cart: true,
+      payment_method: "cod",
+      delivery_address: formData,
+    };
+
+    if (state.isGuestCheckout) {
+      orderPayload.guest_email = formData.email;
+    }
+
     const order = await api("/orders", {
       method: "POST",
-      body: JSON.stringify({
-        use_cart: true,
-        payment_method: "cod",
-        delivery_address: Object.fromEntries(form.entries()),
-      }),
+      body: JSON.stringify(orderPayload),
     });
     els.checkoutDialog.close();
     els.checkoutForm.reset();
     await loadCart();
     await loadProducts();
-    showToast("Order placed");
+    showToast("Order placed successfully!");
     showBill(order);
+    state.isGuestCheckout = false;
   } catch (error) {
     showToast(error.message, true);
   }
@@ -942,3 +1093,44 @@ els.adminOrdersList.addEventListener("submit", async (event) => {
 
 renderAuth();
 refreshAll();
+
+// Hamburger Menu Toggle
+const hamburgerBtn = document.querySelector("#hamburgerBtn");
+const sidebar = document.querySelector(".sidebar");
+
+if (hamburgerBtn) {
+  hamburgerBtn.addEventListener("click", () => {
+    sidebar.classList.toggle("open");
+  });
+
+  // Close sidebar when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!sidebar.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+      sidebar.classList.remove("open");
+    }
+  });
+
+  // Close sidebar when clicking a nav item
+  document.querySelectorAll(".nav-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      sidebar.classList.remove("open");
+    });
+  });
+}
+
+// Floating Cart Button
+const floatingCartBtn = document.querySelector("#floatingCartBtn");
+if (floatingCartBtn) {
+  floatingCartBtn.addEventListener("click", () => {
+    setView("shop");
+    document.querySelector(".cart-panel")?.scrollIntoView({ behavior: "smooth" });
+  });
+}
+
+// Policies nav handler (if present)
+const policiesLink = document.querySelector("[data-view='policies']");
+if (policiesLink) {
+  policiesLink.addEventListener("click", () => {
+    setView("policies");
+  });
+}
