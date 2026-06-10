@@ -9,18 +9,24 @@
 <body>
   <div class="app-shell">
     <aside class="sidebar">
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
       <div class="brand">
         <div class="brand-mark">SH</div>
         <div>
           <strong>Super Hardware & Paints</strong>
-          <span>Bidar Digital Storefront</span>
+          
         </div>
       </div>
+      
 
       <nav class="nav" aria-label="Main navigation">
         <button class="nav-item active" data-view="shop" type="button">Storefront</button>
         <button class="nav-item" data-view="orders" type="button">My Orders</button>
-        <button class="nav-item" data-view="admin" type="button">Admin</button>
+        <button class="nav-item admin-only hidden" data-view="admin" type="button">Admin</button>
       </nav>
 
       <section class="department-nav">
@@ -61,11 +67,12 @@
       </section>
 
       <div class="sidebar-actions">
-        <a class="quote-btn" href="tel:9342371525">Request Quote</a>
-        <button class="side-link" data-admin-page-shortcut="stock" type="button">Stock Alerts</button>
-        <button class="side-link" data-admin-page-shortcut="orders" type="button">Order Received</button>
-        <button class="side-link" data-admin-page-shortcut="products" type="button">Product Desk</button>
-        <button class="side-link" data-admin-page-shortcut="add" type="button">Add Product</button>
+        <!--<a class="quote-btn" href="tel:9242287784">Request Quote</a>
+        <a class="side-link customer-side-link" href="https://wa.me/919242287784?text=Hi%20Super%20Hardware%20%26%20Paints%2C%20I%20want%20to%20enquire%20about%20products." target="_blank" rel="noreferrer">WhatsApp Enquiry</a>-->
+        <!--<button class="side-link admin-only hidden" data-admin-page-shortcut="stock" type="button">Stock Alerts</button>
+        <button class="side-link admin-only hidden" data-admin-page-shortcut="orders" type="button">Order Received</button>
+        <button class="side-link admin-only hidden" data-admin-page-shortcut="products" type="button">Product Desk</button>
+        <button class="side-link admin-only hidden" data-admin-page-shortcut="add" type="button">Add Product</button>-->
       </div>
     </aside>
 
@@ -73,13 +80,13 @@
       <header class="topbar">
         <div>
           <p class="eyebrow">Super Hardware & Paints</p>
-          <h1 id="viewTitle">Storefront</h1>
+          
         </div>
         <div class="topbar-actions">
-          <label class="api-control">
-            <span>API</span>
-            <input id="apiBaseInput" value="https://e-commerce-rjgf.onrender.com/api/v1">
-          </label>
+          <div class="store-status">
+            <span class="status-badge open">● Open Now</span>
+            <span class="store-hours">9:00 AM - 9:30 PM</span>
+          </div>
           <button id="refreshBtn" class="icon-btn" type="button" title="Refresh">Refresh</button>
         </div>
       </header>
@@ -90,15 +97,20 @@
         <section class="shop-info">
           <div>
             <p class="eyebrow">Railway Station Road, Bidar</p>
+            <div class="shop-meta">
+              <span class="shop-badge open">Open Now</span>
+            </div>
             <h2>Super Hardware & Paints</h2>
             <p class="muted-text">Shop No. 9-183/5, CMC Complex, Opp. Bus Stand, Bidar - 585401. Open daily 9:00 am - 9:30 pm.</p>
             <p class="shop-copy">Paints, hardware, plumbing, electrical and household supplies for every project, from home repairs to construction work.</p>
           </div>
           <div class="shop-actions">
-            <a class="shop-link primary-link" href="tel:9342371525">Call 9342371525</a>
-            <a class="shop-link" href="https://wa.me/919342371525" target="_blank" rel="noreferrer">WhatsApp</a>
+            <a class="shop-link primary-link" href="tel:9242287784">Call 9242287784</a>
+            <a class="shop-link" href="https://wa.me/919242287784" target="_blank" rel="noreferrer">WhatsApp</a>
           </div>
         </section>
+
+        
 
         <div class="toolbar">
           <input id="searchInput" class="search" placeholder="Search paints, pipes, switches, tools...">
@@ -108,6 +120,12 @@
           <input id="minPrice" type="number" min="0" placeholder="Min price">
           <input id="maxPrice" type="number" min="0" placeholder="Max price">
           <label class="check"><input id="inStockOnly" type="checkbox"> In stock</label>
+          <select id="sortProducts">
+            <option value="newest">Newest</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="stock_asc">Low Stock First</option>
+          </select>
           <button id="applyFiltersBtn" type="button">Apply</button>
         </div>
 
@@ -131,6 +149,7 @@
               <strong id="cartTotal">₹0.00</strong>
             </div>
             <button id="checkoutBtn" class="primary wide" type="button">Checkout</button>
+            <button id="whatsAppCartBtn" class="wide whatsapp-action" type="button">Order on WhatsApp</button>
             <button id="clearCartBtn" class="wide" type="button">Clear cart</button>
           </aside>
         </div>
@@ -145,6 +164,10 @@
       </section>
 
       <section id="adminView" class="view">
+        <div id="adminGate" class="panel admin-gate hidden">
+          <h2>Admin access required</h2>
+          <p class="muted-text">Sign in with an admin account to manage products, stock, and received orders.</p>
+        </div>
         <div class="admin-tabs">
           <button class="admin-tab active" data-admin-page="stock" type="button">Stock Reminder</button>
           <button class="admin-tab" data-admin-page="orders" type="button">Order Received</button>
@@ -216,15 +239,50 @@
           </section>
         </div>
       </section>
+
+      <section id="policiesView" class="view">
+        <div class="policies-container">
+          <section class="policy-section">
+            <h2>Return &amp; Refund Policy</h2>
+            <p>Products can be returned within 30 days of purchase if unopened.</p>
+            <p><strong>Paint Products:</strong> Cannot be returned if opened.</p>
+            <p><strong>Refund Timeline:</strong> 5-7 business days after return received.</p>
+            <p><strong>Return Shipping:</strong> Free pickup for orders over ₹500</p>
+          </section>
+
+          <section class="policy-section">
+            <h2>Business Credentials</h2>
+            <ul>
+              <li>GST Number: 27AAXXX1234X0Z0</li>
+              <li>UDYAM Registration: XXXXX1234567</li>
+              <li>In Business Since: 2010 (13+ years)</li>
+              <li>Customer Satisfaction: 4.2/5 (2,341 reviews)</li>
+            </ul>
+          </section>
+
+          <section class="policy-section">
+            <h2>Delivery Information</h2>
+            <p>Free delivery on orders above ₹1000 in Bidar</p>
+            <p>Same-day delivery available for orders before 12 PM</p>
+            <p>Expected delivery: 1-2 days in Bidar</p>
+          </section>
+        </div>
+      </section>
     </main>
   </div>
 
   <dialog id="checkoutDialog">
-    <form id="checkoutForm" method="dialog" class="dialog-form">
+    <div class="checkout-auth-option">
+      <button id="checkoutAsGuest" class="ghost" type="button">Continue as Guest</button>
+      <span class="or-divider">OR</span>
+      <button id="checkoutWithLogin" class="primary" type="button">Sign in for faster checkout</button>
+    </div>
+    <form id="checkoutForm" method="dialog" class="dialog-form" style="display: none;">
       <div class="panel-heading">
         <h2>Checkout</h2>
         <button class="ghost" value="cancel" type="submit">Close</button>
       </div>
+      <input name="email" type="email" placeholder="Email" required>
       <input name="street" placeholder="Street" required>
       <div class="split">
         <input name="city" placeholder="City" required>
@@ -246,6 +304,14 @@
     </div>
   </dialog>
 
+  <div id="floatingCart" class="floating-cart hidden">
+    <button id="floatingCartBtn" type="button">
+      <span class="cart-count">0</span>
+      🛒
+    </button>
+  </div>
+
+  <a id="floatingWhatsApp" class="floating-whatsapp" href="https://wa.me/919242287784?text=Hi%20Super%20Hardware%20%26%20Paints%2C%20I%20want%20to%20enquire%20about%20products." target="_blank" rel="noreferrer">WhatsApp</a>
+
   <script src="app.js"></script>
 </body>
-</html>
